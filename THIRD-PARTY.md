@@ -15,7 +15,10 @@ The newly written host is MIT licensed. Dependencies and original game data are 
 The repository does not contain firmware, original game binaries, disassembly,
 Nokia media assets, personal saves, signing keys or prebuilt packages containing
 those assets. Asset hashes describe the supported extraction; they are not the
-assets themselves. The public release is the compatibility-layer source.
+assets themselves. The public release includes compiled hosts and matching host
+source. The exact Unicorn 2.1.4 upstream source and its license files are supplied
+alongside the binaries in the same Release. Python bindings are adjusted only by
+the loader-path substitution documented in `tools/prepare.py`.
 
 本仓库开源的是新编写的兼容层和各平台界面，不包含 Nokia 固件、原版程序、
 字体、图标、音效采样或反汇编。原版资源需自行提供并导入，资源校验值不代表

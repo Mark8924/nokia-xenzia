@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
     private JSONObject options=new JSONObject();
     private Bitmap lastFrame;
     private float density;
+    private File engineDirectory;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);density=getResources().getDisplayMetrics().density;
@@ -66,11 +67,18 @@ public class MainActivity extends Activity {
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         thread=new HandlerThread("NokiaEngine");thread.start();worker=new Handler(thread.getLooper());
         worker.post(()->{try {
-            File engine=unpack();
+            engineDirectory=unpack();
             if(!Python.isStarted())Python.start(new AndroidPlatform(this));
-            game=Python.getInstance().getModule("bootstrap").callAttr("open_game",engine.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir);
+            boolean available=Python.getInstance().getModule("bootstrap").callAttr("prepare",engineDirectory.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir).toBoolean();
+            if(!available){ui.post(()->offerImport(null));return;}
+            startEngine();
+        } catch(Throwable error){error(error);} });
+    }
+
+    private void startEngine() throws Exception {
+            game=Python.getInstance().getModule("bootstrap").callAttr("open_game",engineDirectory.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir);
             options=new JSONObject(game.callAttr("settings").toString());
-            for(int i=0;i<5;i++){String name="effect-"+i;tones.put(name,sound.load(new File(engine,"assets/audio/"+name+".wav").getAbsolutePath(),1));}
+            for(int i=0;i<5;i++){String name="effect-"+i;String path=Python.getInstance().getModule("bootstrap").callAttr("audio_file",name).toString();tones.put(name,sound.load(path,1));}
             ready=true;publish();ui.post(()->pad.setVisibility(options.optBoolean("controls_visible",true)?View.VISIBLE:View.GONE));
             if((getApplicationInfo().flags&android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)!=0&&getIntent().getBooleanExtra("self_test",false)) {
                 String result=Python.getInstance().getModule("bootstrap").callAttr("self_test",new File(getFilesDir(),"qa").getAbsolutePath()).toString();
@@ -78,7 +86,36 @@ public class MainActivity extends Activity {
                 android.util.Log.i("XenziaQA",result);
             }
             if(active)worker.post(tick);
-        } catch(Throwable error){error(error);} });
+    }
+
+    private void offerImport(String reason) {
+        String message="The host does not include Nokia game data. Select a ZIP containing your supported extracted assets. Import is only needed once.\n\n请选择包含原版提取资源的 ZIP，只需导入一次。安装包不含诺基亚原版游戏数据。";
+        if(reason!=null)message=reason+"\n\n"+message;
+        new AlertDialog.Builder(this).setTitle("Import resources / 导入资源").setMessage(message)
+            .setPositiveButton("选择 ZIP",(d,w)->{
+                android.content.Intent intent=new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);intent.setType("*/*");startActivityForResult(intent,710);
+            }).setNegativeButton("退出",(d,w)->finish()).setCancelable(false).show();
+    }
+
+    @Override protected void onActivityResult(int request,int result,android.content.Intent data) {
+        super.onActivityResult(request,result,data);
+        if(request!=710)return;
+        if(result!=RESULT_OK||data==null||data.getData()==null){offerImport(null);return;}
+        android.net.Uri uri=data.getData();
+        worker.post(()->{
+            File incoming=new File(getCacheDir(),"original-import.zip");
+            try {
+                try(InputStream input=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(incoming)){
+                    if(input==null)throw new IOException("Unable to open ZIP");
+                    byte[] buffer=new byte[16384];int n;long size=0;
+                    while((n=input.read(buffer))!=-1){size+=n;if(size>128L*1024*1024)throw new IOException("ZIP exceeds 128 MB");out.write(buffer,0,n);}
+                }
+                Python.getInstance().getModule("bootstrap").callAttr("import_original",incoming.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath());
+                startEngine();
+            }catch(Throwable error){ui.post(()->offerImport(error.toString()));}
+            finally{incoming.delete();}
+        });
     }
 
     private int dp(float value){return Math.round(value*density);}

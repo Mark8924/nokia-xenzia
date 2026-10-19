@@ -4,6 +4,13 @@ Import the supported assets first, as described in the README. Python 3.10+ is
 required. Build products and imported assets are ignored by Git. Do not publish
 packages containing original resources without the necessary rights.
 
+For a distributable host without Nokia resources, add `--public` to either
+`tools/prepare.py desktop` or `tools/prepare.py android ...`. This stages only
+the compatibility code, resource manifest and generated host icon. On first
+launch the compiled application offers a local resource import dialog. Imported
+data lives beside the user's saves, separate from the installed application.
+`test_asset_import.py` covers ZIP validation and saved-speed compatibility.
+
 ## Linux
 
 Install the distribution's GTK3/PyGObject/Cairo packages and Python dependencies.
@@ -51,6 +58,16 @@ Requirements: JDK 21, Gradle 8.14.3, Android SDK platform 36, Python 3.12 on the
 build host, and an Android ARM64 `libunicorn.so` built from Unicorn 2.1.4. Build
 the latter using upstream's CMake build and the Android NDK toolchain, targeting
 ARM, Android API 24 and `arm64-v8a`; a desktop library cannot be substituted.
+
+For the published Android library (NDK 27.3):
+
+```sh
+cmake -S unicorn-2.1.4 -B unicorn-android \
+  -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+  -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 \
+  -DUNICORN_ARCH=arm -DUNICORN_BUILD_TESTS=OFF -DBUILD_SHARED_LIBS=ON
+cmake --build unicorn-android --parallel
+```
 
 ```sh
 python -m pip install -r requirements.txt

@@ -11,6 +11,7 @@ save.state
 settings.json
 *.jks
 *.keystore
+gradle-wrapper.jar
 local.properties
 .gradle/
 ports/android/app/src/main/assets/

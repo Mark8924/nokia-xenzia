@@ -9,9 +9,27 @@ RH-93 firmware 7.02 (2007-12-10) on current computers and Android devices.
 The game logic is not rewritten: its original code controls the snake, food,
 collisions, scoring, speed, mazes, campaign progression and animations.
 
-**This public repository contains the host source, not Nokia's game binaries
-or media assets.** Supply the supported extracted assets before running or
-building. This is an independent project, not an official Nokia release.
+### Download — no compilation needed
+
+| Platform | Ready-built download |
+| --- | --- |
+| Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk) |
+| Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip) |
+| macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip) |
+
+[Release notes and all files](https://github.com/Mark8924/nokia-xenzia/releases/latest)
+
+**Public builds include the compatibility host, not Nokia's original game data.**
+On first launch, select a ZIP containing the supported extracted resources; macOS
+also accepts a folder. Files are checked against SHA-256 before import. No Python
+installation or command line is needed for these downloads. A raw phone firmware
+is not a supported import ZIP. This is an independent project, not an official
+Nokia release. Default speed is **4**; saved speed choices are preserved.
+
+Windows: extract the entire ZIP before opening `SnakeXenzia.exe`.
+macOS: move `Snake Xenzia.app` into Applications. The preview is locally signed,
+not Apple-notarized. Windows 11 ARM can use the x64 compatibility layer; a native
+Windows ARM64 build is not included.
 
 ### Features
 
@@ -59,7 +77,7 @@ game data. See [provenance](docs/PROVENANCE.md) for the research tools and forma
 
 For Windows, macOS and Android source builds, see [BUILD.md](docs/BUILD.md).
 The public [release](https://github.com/Mark8924/nokia-xenzia/releases/latest)
-is a source-only compatibility-layer preview, without original resources.
+contains compiled hosts and source, without original resources.
 
 ### Controls
 
@@ -104,6 +122,20 @@ by this project and are supplied separately.
 
 ## 中文
 
+### 直接下载，无需编译
+
+- [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk)
+- [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip)
+- [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip)
+- [版本说明与全部下载](https://github.com/Mark8924/nokia-xenzia/releases/latest)
+
+安装包包含运行环境，**不包含诺基亚原版游戏程序和素材**。首次启动会出现导入界面，
+选择包含支持的提取资源的 ZIP 即可；Mac 也支持文件夹。导入时会校验全部资源，
+不会复制他人的存档。原始手机固件不能直接导入。Windows 请完整解压再打开 EXE，
+Mac 将应用拖入“应用程序”；Mac 预览版未经 Apple 公证。
+
+新建实例默认速度 **4**，已有存档手动保存的速度不变。
+
 这是在现代电脑和安卓设备上运行 **Nokia 原版 Snake Xenzia 程序**的兼容层。
 对应 Nokia 1110i / 1112 的 RH-93 7.02 固件（2007-12-10）。蛇的运动、食物、
 碰撞、计分、速度、迷宫、闯关与动画由原版 ARM/Thumb 程序执行，不是重写玩法的复刻。
@@ -129,7 +161,7 @@ python app.py
 导入工具先校验完整 SHA-256 清单，只复制清单中的资源；不会导入存档、个人设置或其他文件。
 原始固件不能直接交给这个导入工具，它不负责固件解密或自动下载。
 资源格式和研究工具见 [PROVENANCE.md](docs/PROVENANCE.md)，其他平台构建见
-[BUILD.md](docs/BUILD.md)。公开 Release 是不含原版资源的兼容层源码预览包。
+[BUILD.md](docs/BUILD.md)。公开 Release 提供不含原版资源的编译安装包及对应源码。
 
 方向键、WASD、2468 和屏幕按钮控制方向；Enter / 5 选择或暂停，Esc / P 返回，
 桌面版 F11 全屏。快速连续转弯会依次排队，但转向仍按原版游戏的格点节奏发生。

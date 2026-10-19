@@ -4,6 +4,7 @@ from pathlib import Path
 from session import Session
 from qa_play import original_state,route
 from test_frame_budget import main as maximum_snake
+from asset_store import resource
 
 
 def components(image):
@@ -50,11 +51,11 @@ def run(directory):
         assert loaded.intro is None and len(frames)>10
         assert original_state(loaded.runtime)[3:]==progress
         loaded.close()
-    manifest=json.loads((Path(__file__).parent/'assets/audio/effects.json').read_text())
+    manifest=json.loads(resource('audio/effects.json').read_text())
     for effect in manifest.values():
-        pcm=(Path(__file__).parent/'assets/audio'/effect['file']).read_bytes()
+        pcm=resource('audio/'+effect['file']).read_bytes()
         assert hashlib.sha256(pcm).hexdigest()==effect['sha256']
-        assert (Path(__file__).parent/'assets/audio'/(Path(effect['file']).stem+'.wav')).read_bytes()[:4]==b'RIFF'
+        assert resource('audio/'+Path(effect['file']).stem+'.wav').read_bytes()[:4]==b'RIFF'
     with contextlib.redirect_stdout(io.StringIO()):maximum_snake()
     from test_transitions import check_campaign
     transition=check_campaign()

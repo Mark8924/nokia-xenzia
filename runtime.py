@@ -3,6 +3,7 @@ from unicorn import *
 from unicorn.arm_const import *
 import struct,json,re,base64,zlib,hashlib,random,time
 from PIL import Image, ImageDraw, ImageOps
+from asset_store import resource
 ROOT=Path(__file__).resolve().parent
 GFX_ARGS={258:0,259:0,261:1,262:1,263:0,264:0,266:2,268:4,269:4,270:4}
 CODE=0x8000;SB=0x2000000;HEAP=0x2100000;KERNEL=0x3000000;VT=KERNEL+0x1000;HOST=0x4000000;RET=0x5000000;STACK=0x6000000
@@ -14,15 +15,15 @@ class NokiaRuntime:
  def __init__(self):
   self.u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_BIG_ENDIAN);u=self.u
   for addr,size in [(CODE,0x10000),(SB,0x10000),(HEAP,0x100000),(KERNEL,0x10000),(HOST,0x10000),(RET,0x1000),(STACK,0x10000)]:u.mem_map(addr,size)
-  self.code=(ROOT/'assets/snake-code.bin').read_bytes()
-  u.mem_write(CODE,self.code);u.mem_write(SB,(ROOT/'assets/snake-data.bin').read_bytes())
+  self.code=resource('snake-code.bin').read_bytes()
+  u.mem_write(CODE,self.code);u.mem_write(SB,resource('snake-data.bin').read_bytes())
   u.mem_write(KERNEL,struct.pack('>I',VT));u.mem_write(VT,b''.join(struct.pack('>I',(HOST+i*16+1-VT)&0xffffffff) for i in range(128)));u.mem_write(HOST,b'\x47\x70'*0x8000)
   self.heap=HEAP;self.calls=[];self.stop_reason='';self.clock=0
   self.random=random.Random()
   self._frame_start=None
   self.objs={};self.classes={};self.textpos=SB+0x2000;self.pending=[];self.tracing=False;self.menu_stack=[];self.menu=None;self.overlay=None;self.close_requested=False;self.ui_reset=False;self.sounds=[]
-  self.texts=[self.widealloc(t,static=True) for t in json.loads((ROOT/'assets/texts.json').read_text())]
-  self.fonts=json.loads((ROOT/'assets/fonts.json').read_text());self.font='3'
+  self.texts=[self.widealloc(t,static=True) for t in json.loads(resource('texts.json').read_text())]
+  self.fonts=json.loads(resource('fonts.json').read_text());self.font='3'
   self.image=Image.new('RGB',(96,65),'white');self.draw=ImageDraw.Draw(self.image,'RGBA');self.pen='#000000';self.bg=0xffffffff;self.frame_background=0xffffffff;self.delay=58;self.blocks={};self.freeblocks=[]
   self.gfx=KERNEL+0x100
   u.mem_write(self.gfx,struct.pack('>I',VT+0x1000))
@@ -32,6 +33,9 @@ class NokiaRuntime:
   u.hook_add(UC_HOOK_MEM_INVALID,self.invalid)
   self.call(CODE+0x4db4,KERNEL);self.app=self.call(CODE,0);self.state=self.word(self.app+0x18)
   self.frame(1)
+  # Native settings store the displayed speed as 1..9. Set only a fresh
+  # runtime's default; restore() subsequently restores the user's saved speed.
+  self.u.mem_write(self.state+4,struct.pack('>I',4))
  def alloc(self,n):
   n=max(16,(n+7)&~7);p=self.heap
   for i,(q,m) in enumerate(self.freeblocks):

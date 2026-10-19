@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from runtime import NokiaRuntime
 from controls import TurnBuffer, DIRECTIONS
+from asset_store import resource
 
 
 class Session:
@@ -27,7 +28,7 @@ class Session:
         if not self.runtime.menu:self.runtime.key('back')
         self.intro=NokiaRuntime() if self.options['play_intro'] else None
         self.turns=TurnBuffer();self.last_save=time.monotonic();self.audio=[]
-        self.effects=json.loads((Path(__file__).parent/'assets/audio/effects.json').read_text())
+        self.effects=json.loads(resource('audio/effects.json').read_text())
 
     @property
     def active(self):return self.intro if self.intro is not None else self.runtime
