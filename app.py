@@ -120,7 +120,7 @@ class Game(Gtk.ApplicationWindow):
         self.controls=grid
         self.direction_gestures=[]
         for label, key, x, y in [('2  ↑','up',1,0), ('4  ←','left',0,1),
-                                 ('5  ●','select',1,1), ('6  →','right',2,1), ('8  ↓','down',1,2)]:
+                                 ('6  →','right',2,1), ('8  ↓','down',1,2)]:
             button = Gtk.Button(label=label)
             button.set_size_request(116, 46)
             button.set_can_focus(False)

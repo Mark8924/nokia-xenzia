@@ -13,10 +13,10 @@ collisions, scoring, speed, mazes, campaign progression and animations.
 
 | Platform | Ready-built download |
 | --- | --- |
-| Arch Linux / Arch Linux ARM | [Installable package](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz) |
-| Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk) |
-| Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip) |
-| macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip) |
+| Arch Linux / Arch Linux ARM | [Installable package](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/nokia-xenzia-host-1.0.2-1-any.pkg.tar.xz) |
+| Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-Android-arm64.apk) |
+| Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-Windows-x64.zip) |
+| macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-macOS-AppleSilicon.zip) |
 
 [Release notes and all files](https://github.com/Mark8924/nokia-xenzia/releases/latest)
 
@@ -37,7 +37,7 @@ Windows ARM64 build is not included.
 
 - Original Classic, Modern and Campaign modes, speed levels 1–9 and six mazes.
 - Native interfaces: GTK on Linux, Win32 on Windows, Cocoa on macOS and Java on Android.
-- Keyboard, touch/swipe and optional on-screen direction buttons.
+- Keyboard, touch/swipe and optional four-button direction pad; its centre stays empty to avoid accidental pauses.
 - Original colours, black-on-white and white-on-black display options.
 - Optional original opening animation, enabled separately from saved progress.
 - Automatic pause and local saves; no account, telemetry, server or autostart service.
@@ -61,7 +61,7 @@ are not emulated exactly.
 Download the package above, then install it and launch from the application list:
 
 ```sh
-sudo pacman -U ./nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz
+sudo pacman -U ./nokia-xenzia-host-1.0.2-1-any.pkg.tar.xz
 snake-xenzia
 ```
 
@@ -101,6 +101,8 @@ contains compiled hosts and source, without original resources.
 | Back / pause | Esc / P; on-screen Back |
 | Fullscreen on desktop | F11 |
 
+The on-screen direction pad contains only 2 / 4 / 6 / 8. Its centre has no button or click target; use the separate Select / Pause control instead. The physical 5 key still works.
+
 Touch direction buttons act on contact. Fast consecutive valid turns are queued
 in order. The original game still turns at its own grid boundaries; a slower
 native speed setting therefore waits longer before a turn takes effect.
@@ -137,10 +139,10 @@ by this project and are supplied separately.
 
 ### 直接下载，无需编译
 
-- [Arch / Arch Linux ARM 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz)
-- [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk)
-- [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip)
-- [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip)
+- [Arch / Arch Linux ARM 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/nokia-xenzia-host-1.0.2-1-any.pkg.tar.xz)
+- [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-Android-arm64.apk)
+- [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-Windows-x64.zip)
+- [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.2-preview/SnakeXenzia-1.0.2-preview-macOS-AppleSilicon.zip)
 - [版本说明与全部下载](https://github.com/Mark8924/nokia-xenzia/releases/latest)
 
 Windows、Mac、安卓安装包包含运行环境；Arch 包由 pacman 安装依赖。
@@ -170,7 +172,7 @@ Linux 使用 GTK，Windows 使用 Win32，macOS 使用 Cocoa，Android 使用原
 下载上面的 Arch 安装包，然后：
 
 ```sh
-sudo pacman -U ./nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz
+sudo pacman -U ./nokia-xenzia-host-1.0.2-1-any.pkg.tar.xz
 snake-xenzia
 ```
 

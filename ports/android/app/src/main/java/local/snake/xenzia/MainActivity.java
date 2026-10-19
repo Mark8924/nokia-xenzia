@@ -55,7 +55,8 @@ public class MainActivity extends Activity {
             for(int col=0;col<3;col++) {
                 String label=null,key=null;
                 if(row==0&&col==1){label="↑  2";key="up";}
-                if(row==1){label=new String[]{"←  4","●  5","→  6"}[col];key=new String[]{"left","select","right"}[col];}
+                if(row==1&&col==0){label="←  4";key="left";}
+                if(row==1&&col==2){label="→  6";key="right";}
                 if(row==2&&col==1){label="↓  8";key="down";}
                 View v=key==null?new View(this):button(label,key);
                 line.addView(v,new LinearLayout.LayoutParams(dp(96),dp(50)));

@@ -140,7 +140,7 @@ class Window:
             self.button(dc,(w/2+gap/2,by,w-margin,by+bh),'返回   Back','back')
             if pad:
                 size=min(110*d,(w-60*d)/3);cell_h=48*d;cx=w/2-size/2;cy=by+58*d
-                for label,key,col,row in [('↑  2','up',0,0),('←  4','left',-1,1),('●  5','select',0,1),('→  6','right',1,1),('↓  8','down',0,2)]:
+                for label,key,col,row in [('↑  2','up',0,0),('←  4','left',-1,1),('→  6','right',1,1),('↓  8','down',0,2)]:
                     xx=cx+col*(size+8*d);yy=cy+row*(cell_h+8*d)
                     self.button(dc,(xx,yy,xx+size,yy+cell_h),label,key)
             self.text(dc,(0,h-26*d,w,h-5*d),'↑ ↓ ← → / WASD / 2 4 6 8  ·  Enter  ·  Esc  ·  F11',True)

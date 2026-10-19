@@ -92,7 +92,7 @@ class Controller(NSObject):
             self.screen=Screen.alloc().initWithFrame_(NSMakeRect(0,240,760,530));self.screen.owner=self;self.screen.image=None;self.content.addSubview_(self.screen)
             self.header=NSTextField.labelWithString_('S N A K E   X E N Z I A');self.header.setAlignment_(NSTextAlignmentCenter);self.header.setFont_(NSFont.boldSystemFontOfSize_(19));self.content.addSubview_(self.header)
             self.buttons=[]
-            for label,key in [('选择 / 暂停   Select','select'),('返回   Back','back'),('↑  2','up'),('←  4','left'),('●  5','select'),('→  6','right'),('↓  8','down')]:
+            for label,key in [('选择 / 暂停   Select','select'),('返回   Back','back'),('↑  2','up'),('←  4','left'),('→  6','right'),('↓  8','down')]:
                 button=ContactButton.alloc().initWithFrame_(NSMakeRect(0,0,100,40));button.setTitle_(label);button.setBezelStyle_(NSBezelStyleRounded);button.setFont_(NSFont.systemFontOfSize_(16));button.owner=self;button.command=key;button.contact=False;button.setTarget_(self);button.setAction_('button:');self.content.addSubview_(button);self.buttons.append(button)
             self.create_menu();self.layout();self.refresh();self.window.center();self.window.makeKeyAndOrderFront_(None);self.window.makeFirstResponder_(self.screen)
             NSApp.activateIgnoringOtherApps_(True);self.schedule(1)
@@ -120,7 +120,7 @@ class Controller(NSObject):
         w,h=self.content.bounds().size;pad=188 if self.game.options['controls_visible'] else 0
         self.header.setFrame_(NSMakeRect(12,h-44,w-24,26));self.screen.setFrame_(NSMakeRect(0,74+pad,w,h-126-pad))
         self.buttons[0].setFrame_(NSMakeRect(16,24+pad,w/2-22,44));self.buttons[1].setFrame_(NSMakeRect(w/2+6,24+pad,w/2-22,44))
-        for button,(col,row) in zip(self.buttons[2:],[(0,2),(-1,1),(0,1),(1,1),(0,0)]):
+        for button,(col,row) in zip(self.buttons[2:],[(0,2),(-1,1),(1,1),(0,0)]):
             button.setHidden_(not self.game.options['controls_visible']);button.setFrame_(NSMakeRect(w/2-54+col*118,20+row*56,108,46))
 
     def windowDidResize_(self,notification):
