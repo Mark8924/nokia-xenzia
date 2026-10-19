@@ -11,14 +11,16 @@ collisions, scoring, speed, mazes, campaign progression and animations.
 
 ### Download — no compilation needed
 
-| Platform | Ready-built download |
-| --- | --- |
-| Arch Linux / Arch Linux ARM | [Installable package](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/nokia-xenzia-host-1.0.3-1-any.pkg.tar.xz) |
-| Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Android-arm64.apk) |
-| Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Windows-x64.zip) |
-| macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-macOS-AppleSilicon.zip) |
+| Platform | Ready-built download | Original resource source |
+| --- | --- | --- |
+| Arch Linux / Arch Linux ARM | [Installable package](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/nokia-xenzia-host-1.0.3-1-any.pkg.tar.xz) | [Original firmware — RAR, extraction required](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar) |
+| Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Android-arm64.apk) | [Original firmware — RAR, extraction required](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar) |
+| Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Windows-x64.zip) | [Original firmware — RAR, extraction required](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar) |
+| macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-macOS-AppleSilicon.zip) | [Original firmware — RAR, extraction required](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar) |
 
 [Release notes and all files](https://github.com/Mark8924/nokia-xenzia/releases/latest)
+
+**The resource-source link is a raw RH-93 7.02 phone firmware RAR, not an import-ready resource ZIP. It cannot be selected directly in the importer. No verified public ZIP matching the complete resource manifest has been found.**
 
 **Public builds include the compatibility host, not Nokia's original game data.**
 On first launch, select a ZIP containing the supported extracted resources; macOS
@@ -110,6 +112,8 @@ native speed setting therefore waits longer before a turn takes effect.
 
 ### Tests
 
+[Arch validation results — 2026-10-19](docs/ARCH-VALIDATION.md)
+
 After importing assets, run the isolated core tests:
 
 ```sh
@@ -142,11 +146,13 @@ relicensed by this project and are supplied separately.
 
 ### 直接下载，无需编译
 
-- [Arch / Arch Linux ARM 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/nokia-xenzia-host-1.0.3-1-any.pkg.tar.xz)
-- [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Android-arm64.apk)
-- [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Windows-x64.zip)
-- [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-macOS-AppleSilicon.zip)
+- [Arch / Arch Linux ARM 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/nokia-xenzia-host-1.0.3-1-any.pkg.tar.xz) · [原版固件来源（RAR，需提取）](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar)
+- [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Android-arm64.apk) · [原版固件来源（RAR，需提取）](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar)
+- [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-Windows-x64.zip) · [原版固件来源（RAR，需提取）](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar)
+- [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.3-preview/SnakeXenzia-1.0.3-preview-macOS-AppleSilicon.zip) · [原版固件来源（RAR，需提取）](https://firmware.center/firmware/Nokia/1110i%20%281112%29/Flash%20Files/RH-093%20v.07.02%201110i%201112.rar)
 - [版本说明与全部下载](https://github.com/Mark8924/nokia-xenzia/releases/latest)
+
+**旁边的来源链接是 RH-93 7.02 原始固件 RAR，不是可直接导入的资源 ZIP，不能在导入器中直接选择。目前尚未找到与全部资源清单匹配的公开 ZIP。**
 
 Windows、Mac、安卓安装包包含运行环境；Arch 包由 pacman 安装依赖。
 **公开包不包含诺基亚原版游戏程序、字体和音效**（应用图标沿用最初的黑白原版）。首次启动会出现导入界面，
