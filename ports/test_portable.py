@@ -31,12 +31,13 @@ def run(directory):
         game.runtime.random.seed(265);game.tap(15,19)
         assert not game.is_menu()
         r=game.runtime
+        target_score=3*r.word(r.state+4)
         for step in range(150):
             field,s,f,head,food,body=original_state(r);path=route(head,food,body);assert path
             game.key(path[0])
             for _ in range(4):game.tick()
-            if r.word(r.state+8)>=3:break
-        score=r.word(r.state+8);assert score>=3
+            if r.word(r.state+8)>=target_score:break
+        score=r.word(r.state+8);assert score==target_score
         progress=original_state(r)[3:]
         game.configure('color_mode','dark');game.configure('controls_visible',False);game.configure('play_intro',True)
         assert len(game.pixels())==96*65*4

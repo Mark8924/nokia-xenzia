@@ -5,7 +5,7 @@ import objc
 from AppKit import *
 from Foundation import NSObject,NSTimer,NSData,NSMakeRect
 from session import Session
-from asset_store import resource,ensure_assets,import_assets
+from asset_store import resource,ensure_assets
 
 DATA=Path.home()/'Library/Application Support/Snake Xenzia'
 if '--self-test' in sys.argv:DATA=Path(sys.argv[sys.argv.index('--self-test')+1])
@@ -72,18 +72,13 @@ class ContactButton(NSButton):
 
 class Controller(NSObject):
     def applicationDidFinishLaunching_(self,notification):
+        self.failed=False;self.timer=None;self.preparing=True
         try:
+            self.preparing=True
             if not ensure_assets(DATA):
-                alert=NSAlert.alloc().init();alert.setMessageText_('Import original resources / 导入原版资源')
-                alert.setInformativeText_('The host does not include Nokia game data. Select a ZIP or folder containing your supported extracted assets. Import is only needed once.\n\n安装包不含诺基亚原版游戏数据。请选择包含已提取资源的 ZIP 或文件夹，只需导入一次。')
-                alert.addButtonWithTitle_('Choose / 选择');alert.addButtonWithTitle_('Cancel / 取消')
-                if alert.runModal()!=NSAlertFirstButtonReturn:NSApp.terminate_(None);return
-                while True:
-                    panel=NSOpenPanel.openPanel();panel.setCanChooseFiles_(True);panel.setCanChooseDirectories_(True);panel.setAllowsMultipleSelection_(False)
-                    if panel.runModal()!=NSModalResponseOK:NSApp.terminate_(None);return
-                    try:import_assets(panel.URL().path(),DATA);break
-                    except Exception as error:
-                        alert=NSAlert.alloc().init();alert.setMessageText_('Import failed / 导入失败');alert.setInformativeText_(str(error));alert.runModal()
+                from startup_mac import prepare
+                if not prepare(DATA):NSApp.terminate_(None);return
+            self.preparing=False
             self.game=Session(DATA);self.failed=False;self.timer=None;self.current_sound=None
             self.window=NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(NSMakeRect(0,0,760,820),NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskResizable,NSBackingStoreBuffered,False)
             self.window.setTitle_('Snake Xenzia');self.window.setDelegate_(self);self.window.setMinSize_((430,520))
@@ -178,7 +173,7 @@ class Controller(NSObject):
         if hasattr(self,'game') and not self.failed:self.game.pause();self.refresh()
 
     def windowWillClose_(self,notification):NSApp.terminate_(None)
-    def applicationShouldTerminateAfterLastWindowClosed_(self,app):return True
+    def applicationShouldTerminateAfterLastWindowClosed_(self,app):return not getattr(self,'preparing',False)
     def applicationShouldTerminate_(self,app):
         if hasattr(self,'game') and not self.failed:self.game.close()
         return NSTerminateNow

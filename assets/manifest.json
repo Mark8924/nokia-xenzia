@@ -6,7 +6,10 @@
   "texts.json": "e94a2abc246049536e89fa7ab56c88766ea37b991e18ecab2a85d814bc7798fb",
   "audio/effect-3.s16le": "1a1cba4aa214504fca20179d2f58e476b5f7f66bdff3841db4acbccfea2f61b7",
   "audio/effect-1.s16le": "080647e5464081426fc60867d3fde9aee74c1f26e4acea276c47462c3cecb11f",
-  "audio/nokia-rh93.sf2": "c12dbd369d418ee18d725151ef2679174e5eb85ce4e836aefc9e3d18e75df75d",
+  "audio/nokia-rh93.sf2": [
+    "c12dbd369d418ee18d725151ef2679174e5eb85ce4e836aefc9e3d18e75df75d",
+    "c1a1eeb966f6e9b63e86e4022f82a94ab5a2d856419676a4bd0aae145a42bf51"
+  ],
   "audio/original-rh93.dls": "4b7996245d608aca6e959e39e3691827ec64a2c38ce9ff28282253cc5cdce261",
   "audio/effect-4.s16le": "2e65b5af44e57810296c6988f43ee6c2b0c22c0f44cfd5fb458c2882adbc2c1e",
   "audio/effects.json": "874602e79bd0804b455aa137f3084ee0e484da33dd63f0e2bf7ff9a969af9632",

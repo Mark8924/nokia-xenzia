@@ -4,13 +4,13 @@ from ctypes import wintypes as W
 import json,logging,os,sys,time,winsound
 from pathlib import Path
 from session import Session
-from asset_store import resource,ensure_assets,import_assets
+from asset_store import resource,ensure_assets
 
 ROOT=Path(__file__).resolve().parent
 DATA=Path(os.environ.get('LOCALAPPDATA',Path.home()))/'SnakeXenzia'
 if '--self-test' in sys.argv:DATA=Path(sys.argv[sys.argv.index('--self-test')+1])
 DATA.mkdir(parents=True,exist_ok=True)
-logging.basicConfig(filename=DATA/'game.log',level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s')
+logging.basicConfig(filename=DATA/'game.log',level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',encoding='utf-8')
 u=C.WinDLL('user32',use_last_error=True);g=C.WinDLL('gdi32',use_last_error=True);k=C.WinDLL('kernel32',use_last_error=True)
 PTR=C.c_void_p;LRESULT=C.c_ssize_t;WPARAM=C.c_size_t;LPARAM=C.c_ssize_t
 PROC=C.WINFUNCTYPE(LRESULT,W.HWND,W.UINT,WPARAM,LPARAM)
@@ -250,17 +250,8 @@ def main():
         if hwnd:u.ShowWindow(hwnd,9);u.SetForegroundWindow(hwnd)
         return
     if not ensure_assets(DATA):
-        class OPENFILENAME(C.Structure):
-            _fields_=[('size',W.DWORD),('owner',W.HWND),('instance',PTR),('filter',W.LPCWSTR),('custom',W.LPWSTR),('maxCustom',W.DWORD),('index',W.DWORD),('file',W.LPWSTR),('maxFile',W.DWORD),('titleFile',W.LPWSTR),('maxTitle',W.DWORD),('directory',W.LPCWSTR),('title',W.LPCWSTR),('flags',W.DWORD),('offset',W.WORD),('extension',W.WORD),('defaultExtension',W.LPCWSTR),('data',LPARAM),('hook',PTR),('template',W.LPCWSTR),('reserved',PTR),('reserved2',W.DWORD),('flagsEx',W.DWORD)]
-        dialog=C.WinDLL('comdlg32',use_last_error=True)
-        api(dialog,'GetOpenFileNameW',W.BOOL,C.POINTER(OPENFILENAME))
-        u.MessageBoxW(None,'Original Nokia game data is not included. Select a ZIP containing your supported extracted assets. Import is only needed once.\n\n请选择包含原版提取资源的 ZIP，只需导入一次。安装包不含诺基亚原版游戏数据。','Snake Xenzia — Import / 导入',0x40)
-        while True:
-            name=C.create_unicode_buffer(32768);request=OPENFILENAME();request.size=C.sizeof(request)
-            request.filter='Original resources (*.zip)\0*.zip\0All files\0*.*\0\0';request.file=C.cast(name,W.LPWSTR);request.maxFile=len(name);request.title='Import original resources / 导入原版资源';request.flags=0x80000|0x1000|0x800
-            if not dialog.GetOpenFileNameW(C.byref(request)):return
-            try:import_assets(name.value,DATA);break
-            except Exception as error:u.MessageBoxW(None,str(error),'Import failed / 导入失败',0x10)
+        from startup_windows import prepare
+        if not prepare(DATA,u,k,WC,PROC,api):return
     window=Window();msg=W.MSG()
     while u.GetMessageW(C.byref(msg),None,0,0)>0:u.TranslateMessage(C.byref(msg));u.DispatchMessageW(C.byref(msg))
 

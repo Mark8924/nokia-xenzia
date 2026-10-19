@@ -22,7 +22,7 @@ def validated_files(source, manifest):
             raise ValueError(f'Asset escapes source directory: {name}')
         if not file.is_file():
             raise ValueError(f'Missing asset: {name}')
-        if hashlib.sha256(file.read_bytes()).hexdigest() != expected:
+        if hashlib.sha256(file.read_bytes()).hexdigest() not in (expected if isinstance(expected, list) else [expected]):
             raise ValueError(f'Unsupported or damaged asset: {name}')
         result.append((file, relative))
     return result

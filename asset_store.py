@@ -12,6 +12,10 @@ ROOT = Path(__file__).resolve().parent
 MAX_FILE = 16 * 1024 * 1024
 
 
+def matches_hash(content, expected):
+    return hashlib.sha256(content).hexdigest() in (expected if isinstance(expected, list) else [expected])
+
+
 def resource(name):
     return Path(os.environ.get('SNAKE_XENZIA_ASSETS', ROOT / 'assets')) / name
 
@@ -26,7 +30,7 @@ def complete(directory):
             path = Path(directory) / name
             if not path.is_file() or path.stat().st_size > MAX_FILE:
                 return False
-            if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            if not matches_hash(path.read_bytes(), digest):
                 return False
         return True
     except (OSError, ValueError):
@@ -51,7 +55,7 @@ def import_assets(source, data):
         stage.mkdir()
 
         def store(name, content):
-            if len(content) > MAX_FILE or hashlib.sha256(content).hexdigest() != expected[name]:
+            if len(content) > MAX_FILE or not matches_hash(content, expected[name]):
                 raise ValueError('Unsupported or damaged resource: ' + name)
             out = stage / name
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -78,7 +82,7 @@ def import_assets(source, data):
                             continue
                         with archive.open(entry) as stream:
                             content = stream.read(MAX_FILE + 1)
-                        if hashlib.sha256(content).hexdigest() == digest:
+                        if matches_hash(content, digest):
                             store(name, content)
                             found = True
                             break

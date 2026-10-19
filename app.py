@@ -12,7 +12,7 @@ import signal
 from pathlib import Path
 from runtime import NokiaRuntime
 from controls import TurnBuffer,DIRECTIONS
-from asset_store import ensure_assets,import_assets
+from asset_store import ensure_assets
 
 DATA = Path(os.environ.get('XDG_DATA_HOME', Path.home()/'.local/share'))/'nokia-xenzia'
 STATE = DATA/'save.state'
@@ -418,20 +418,9 @@ def main():
         if app.get_active_window():
             app.get_active_window().present();return
         if not ensure_assets(DATA):
-            notice=Gtk.MessageDialog(message_type=Gtk.MessageType.INFO,buttons=Gtk.ButtonsType.OK_CANCEL,text='Import original resources / 导入原版资源')
-            notice.format_secondary_text('The host does not include Nokia game data. Select a ZIP containing supported extracted resources; import is only needed once.\n\n安装包不含诺基亚原版游戏数据。请选择包含已提取资源的 ZIP，只需导入一次。')
-            response=notice.run();notice.destroy()
-            if response!=Gtk.ResponseType.OK:app.quit();return
-            chooser=Gtk.FileChooserDialog(title='Original resource ZIP / 原版资源 ZIP',action=Gtk.FileChooserAction.OPEN)
-            chooser.add_buttons('Cancel / 取消',Gtk.ResponseType.CANCEL,'Import / 导入',Gtk.ResponseType.OK)
-            filter=Gtk.FileFilter();filter.set_name('ZIP resources');filter.add_pattern('*.zip');chooser.add_filter(filter)
-            while True:
-                if chooser.run()!=Gtk.ResponseType.OK:chooser.destroy();app.quit();return
-                try:import_assets(chooser.get_filename(),DATA);break
-                except Exception as error:
-                    message=Gtk.MessageDialog(transient_for=chooser,message_type=Gtk.MessageType.ERROR,buttons=Gtk.ButtonsType.CLOSE,text='Import failed / 导入失败')
-                    message.format_secondary_text(str(error));message.run();message.destroy()
-            chooser.destroy()
+            from startup_gtk import prepare
+            if not prepare(app, DATA):
+                app.quit();return
         Game(app)
     application.connect('activate',activate)
     application.run()

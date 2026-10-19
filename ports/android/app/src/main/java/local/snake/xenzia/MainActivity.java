@@ -20,6 +20,7 @@ public class MainActivity extends Activity {
     private final Handler ui=new Handler(Looper.getMainLooper());
     private PyObject game;
     private volatile boolean active=false,ready=false,failed=false,introVisible=false;
+    private volatile boolean destroyed=false,preparing=false;
     private GameView screen;
     private LinearLayout root,pad;
     private SoundPool sound;
@@ -29,6 +30,10 @@ public class MainActivity extends Activity {
     private Bitmap lastFrame;
     private float density;
     private File engineDirectory;
+    private LinearLayout preparationPanel;
+    private TextView preparationLabel;
+    private ProgressBar preparationProgress;
+    private Button retryPreparation;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);density=getResources().getDisplayMetrics().density;
@@ -45,6 +50,12 @@ public class MainActivity extends Activity {
         bar.addView(title,new LinearLayout.LayoutParams(0,dp(48),1));title.setGravity(Gravity.CENTER_VERTICAL);
         Button settings=new Button(this);settings.setText("设置 ⋮");settings.setOnClickListener(v->showSettings());bar.addView(settings);
         root.addView(bar,new LinearLayout.LayoutParams(-1,-2));
+        preparationPanel=new LinearLayout(this);preparationPanel.setOrientation(1);preparationPanel.setPadding(dp(20),dp(14),dp(20),dp(14));
+        preparationLabel=new TextView(this);preparationLabel.setText("正在准备游戏… / Preparing game…");preparationLabel.setTextColor(Color.rgb(30,36,39));
+        preparationProgress=new ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);preparationProgress.setMax(100);
+        retryPreparation=new Button(this);retryPreparation.setText("重试 / Retry");retryPreparation.setVisibility(View.GONE);retryPreparation.setOnClickListener(v->prepareEngine());
+        preparationPanel.addView(preparationLabel);preparationPanel.addView(preparationProgress,new LinearLayout.LayoutParams(-1,dp(20)));preparationPanel.addView(retryPreparation);
+        root.addView(preparationPanel,new LinearLayout.LayoutParams(-1,-2));
         screen=new GameView();root.addView(screen,new LinearLayout.LayoutParams(-1,0,1));
         LinearLayout soft=new LinearLayout(this);soft.setPadding(dp(10),0,dp(10),0);
         soft.addView(button("选择 / 暂停", "select"),new LinearLayout.LayoutParams(0,dp(54),1));
@@ -67,13 +78,29 @@ public class MainActivity extends Activity {
         sound=new SoundPool.Builder().setMaxStreams(1).setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build()).build();
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         thread=new HandlerThread("NokiaEngine");thread.start();worker=new Handler(thread.getLooper());
+        prepareEngine();
+    }
+
+    public void onPreparationProgress(String message,int percent) {
+        ui.post(()->{if(!destroyed){preparationLabel.setText(message);preparationProgress.setProgress(percent);}});
+    }
+
+    private void prepareEngine() {
+        if(ready||preparing||destroyed)return;
+        preparing=true;
+        preparationPanel.setVisibility(View.VISIBLE);retryPreparation.setVisibility(View.GONE);preparationLabel.setText("正在准备游戏… / Preparing game…");
         worker.post(()->{try {
             engineDirectory=unpack();
             if(!Python.isStarted())Python.start(new AndroidPlatform(this));
-            boolean available=Python.getInstance().getModule("bootstrap").callAttr("prepare",engineDirectory.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir).toBoolean();
-            if(!available){ui.post(()->offerImport(null));return;}
+            boolean available=Python.getInstance().getModule("bootstrap").callAttr("prepare",engineDirectory.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir,MainActivity.this).toBoolean();
+            if(!available)throw new IOException("Game preparation did not complete");
+            if(destroyed)return;
+            ui.post(()->preparationPanel.setVisibility(View.GONE));
             startEngine();
-        } catch(Throwable error){error(error);} });
+        } catch(Throwable error){
+            android.util.Log.e("XenziaPreparation","Unable to prepare game",error);
+            ui.post(()->{if(!destroyed){preparationPanel.setVisibility(View.VISIBLE);preparationLabel.setText("准备失败，请检查网络后重试。\nPreparation failed. Check your connection and retry.");retryPreparation.setVisibility(View.VISIBLE);}});
+        } finally {preparing=false;} });
     }
 
     private void startEngine() throws Exception {
@@ -87,36 +114,6 @@ public class MainActivity extends Activity {
                 android.util.Log.i("XenziaQA",result);
             }
             if(active)worker.post(tick);
-    }
-
-    private void offerImport(String reason) {
-        String message="The host does not include Nokia game data. Select a ZIP containing your supported extracted assets. Import is only needed once.\n\n请选择包含原版提取资源的 ZIP，只需导入一次。安装包不含诺基亚原版游戏数据。";
-        if(reason!=null)message=reason+"\n\n"+message;
-        new AlertDialog.Builder(this).setTitle("Import resources / 导入资源").setMessage(message)
-            .setPositiveButton("选择 ZIP",(d,w)->{
-                android.content.Intent intent=new android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);intent.setType("*/*");startActivityForResult(intent,710);
-            }).setNegativeButton("退出",(d,w)->finish()).setCancelable(false).show();
-    }
-
-    @Override protected void onActivityResult(int request,int result,android.content.Intent data) {
-        super.onActivityResult(request,result,data);
-        if(request!=710)return;
-        if(result!=RESULT_OK||data==null||data.getData()==null){offerImport(null);return;}
-        android.net.Uri uri=data.getData();
-        worker.post(()->{
-            File incoming=new File(getCacheDir(),"original-import.zip");
-            try {
-                try(InputStream input=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(incoming)){
-                    if(input==null)throw new IOException("Unable to open ZIP");
-                    byte[] buffer=new byte[16384];int n;long size=0;
-                    while((n=input.read(buffer))!=-1){size+=n;if(size>128L*1024*1024)throw new IOException("ZIP exceeds 128 MB");out.write(buffer,0,n);}
-                }
-                Python.getInstance().getModule("bootstrap").callAttr("import_original",incoming.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath());
-                startEngine();
-            }catch(Throwable error){ui.post(()->offerImport(error.toString()));}
-            finally{incoming.delete();}
-        });
     }
 
     private int dp(float value){return Math.round(value*density);}
@@ -185,8 +182,8 @@ public class MainActivity extends Activity {
     }
     @Override public void onResume(){super.onResume();active=true;if(worker!=null&&ready){worker.removeCallbacks(tick);worker.post(tick);sound.autoResume();}}
     @Override public void onPause(){active=false;super.onPause();if(worker!=null){worker.removeCallbacks(tick);worker.post(()->{if(ready&&!failed)try{game.callAttr("pause");}catch(Throwable error){android.util.Log.e("SnakeXenzia","Save error",error);}sound.autoPause();});}}
-    @Override public void onDestroy(){if(worker!=null)worker.post(()->{if(ready&&!failed)try{game.callAttr("close");}catch(Throwable ignored){}sound.release();thread.quitSafely();});super.onDestroy();}
-    @Override public void onBackPressed(){send("back");}
+    @Override public void onDestroy(){destroyed=true;if(worker!=null)worker.post(()->{if(ready&&!failed)try{game.callAttr("close");}catch(Throwable ignored){}sound.release();thread.quitSafely();});super.onDestroy();}
+    @Override public void onBackPressed(){if(!ready)finish();else send("back");}
     @Override public boolean onKeyDown(int code,KeyEvent event) {
         String key=null;
         switch(code){case KeyEvent.KEYCODE_DPAD_UP:case KeyEvent.KEYCODE_W:case KeyEvent.KEYCODE_2:key="up";break;case KeyEvent.KEYCODE_DPAD_DOWN:case KeyEvent.KEYCODE_S:case KeyEvent.KEYCODE_8:key="down";break;case KeyEvent.KEYCODE_DPAD_LEFT:case KeyEvent.KEYCODE_A:case KeyEvent.KEYCODE_4:key="left";break;case KeyEvent.KEYCODE_DPAD_RIGHT:case KeyEvent.KEYCODE_D:case KeyEvent.KEYCODE_6:key="right";break;case KeyEvent.KEYCODE_ENTER:case KeyEvent.KEYCODE_SPACE:case KeyEvent.KEYCODE_5:key="select";break;case KeyEvent.KEYCODE_ESCAPE:case KeyEvent.KEYCODE_P:key="back";break;}

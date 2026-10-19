@@ -21,3 +21,5 @@ ports/android/app/src/main/res/mipmap-*/
 /assets/*
 !/assets/manifest.json
 !/assets/icon.png
+
+/native/bin/

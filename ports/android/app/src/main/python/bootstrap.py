@@ -6,11 +6,16 @@ def open_game(directory,data,native):
     from session import Session
     return Session(data)
 
-def prepare(directory,data,native):
+def prepare(directory,data,native,activity=None):
     os.environ['LIBUNICORN_PATH']=native
+    os.environ['XENZIA_AUDIO_LIBRARY']=os.path.join(native,'libxenzia_audio.so')
     if directory not in sys.path:sys.path.insert(0,directory)
     from asset_store import ensure_assets
-    return ensure_assets(data)
+    if ensure_assets(data):return True
+    from auto_assets import obtain
+    def progress(message,percent):
+        if activity is not None:activity.onPreparationProgress(message,percent)
+    return obtain(data,progress)
 
 def import_original(source,data):
     from asset_store import import_assets
