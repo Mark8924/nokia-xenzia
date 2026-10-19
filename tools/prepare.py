@@ -34,12 +34,7 @@ def payload(public=False, target=None):
             output.writeframes(pcm.read_bytes())
     from PIL import Image
     if public:
-        from PIL import ImageDraw
-        icon=Image.new('RGBA',(256,256),(223,231,205,255));draw=ImageDraw.Draw(icon)
-        draw.rounded_rectangle((12,12,244,244),radius=40,fill=(39,49,37,255))
-        draw.line([(65,171),(65,93),(111,93),(111,143),(166,143),(166,78)],fill=(224,237,189,255),width=23,joint='curve')
-        draw.rectangle((160,64,184,88),fill=(224,237,189,255));draw.rectangle((177,67,181,71),fill=(39,49,37,255))
-        icon.save(target/'assets/icon.png')
+        shutil.copyfile(ROOT / 'assets/icon.png', target / 'assets/icon.png')
     Image.open(target / 'assets/icon.png').convert('RGBA').resize((256, 256), Image.Resampling.NEAREST).save(
         target / 'assets/icon.ico', sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     return target

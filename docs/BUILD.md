@@ -4,9 +4,9 @@ Import the supported assets first, as described in the README. Python 3.10+ is
 required. Build products and imported assets are ignored by Git. Do not publish
 packages containing original resources without the necessary rights.
 
-For a distributable host without Nokia resources, add `--public` to either
+For a distributable host without the original game data, add `--public` to either
 `tools/prepare.py desktop` or `tools/prepare.py android ...`. This stages only
-the compatibility code, resource manifest and generated host icon. On first
+the compatibility code, resource manifest and original black-and-white application icon. On first
 launch the compiled application offers a local resource import dialog. Imported
 data lives beside the user's saves, separate from the installed application.
 `test_asset_import.py` covers ZIP validation and saved-speed compatibility.

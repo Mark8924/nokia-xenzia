@@ -1,5 +1,5 @@
 pkgname=nokia-xenzia-host
-pkgver=1.0.2
+pkgver=1.0.3
 pkgrel=1
 pkgdesc='Native GTK compatibility host for the original Snake Xenzia program'
 arch=('any')
@@ -7,7 +7,7 @@ url='https://github.com/Mark8924/nokia-xenzia'
 license=('MIT')
 depends=('python' 'python-unicorn>=2.1.4' 'python-gobject' 'gtk3' 'python-cairo' 'python-pillow' 'libpulse')
 source=("nokia-xenzia-host-${pkgver}-linux.tar.gz")
-sha256sums=('79264edfd05cb2f18295c649c73b14970ce78c5e20664d9ec89d5f82f6b0390f')
+sha256sums=('e9caf82d04fefd06baad4386326869f57d5d21a7ff402125d36d95107406a68a')
 
 package() {
     install -dm755 "$pkgdir/usr/share/nokia-xenzia"

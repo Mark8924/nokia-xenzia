@@ -20,3 +20,4 @@ ports/android/app/src/main/python/unicorn/
 ports/android/app/src/main/res/mipmap-*/
 /assets/*
 !/assets/manifest.json
+!/assets/icon.png
