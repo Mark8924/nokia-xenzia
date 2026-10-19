@@ -107,6 +107,7 @@ public class MainActivity extends Activity {
             game=Python.getInstance().getModule("bootstrap").callAttr("open_game",engineDirectory.getAbsolutePath(),new File(getFilesDir(),"save").getAbsolutePath(),getApplicationInfo().nativeLibraryDir);
             options=new JSONObject(game.callAttr("settings").toString());
             for(int i=0;i<5;i++){String name="effect-"+i;String path=Python.getInstance().getModule("bootstrap").callAttr("audio_file",name).toString();tones.put(name,sound.load(path,1));}
+            game.callAttr("set_audio_sink",MainActivity.this);
             ready=true;publish();ui.post(()->pad.setVisibility(options.optBoolean("controls_visible",true)?View.VISIBLE:View.GONE));
             if((getApplicationInfo().flags&android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)!=0&&getIntent().getBooleanExtra("self_test",false)) {
                 String result=Python.getInstance().getModule("bootstrap").callAttr("self_test",new File(getFilesDir(),"qa").getAbsolutePath()).toString();
@@ -143,7 +144,11 @@ public class MainActivity extends Activity {
         button.setOnClickListener(v->send(key));return button;
     }
 
-    private final Runnable tick=new Runnable(){@Override public void run(){if(!ready||!active||failed)return;try{int delay=game.callAttr("tick").toInt();publish();worker.postDelayed(this,delay);}catch(Throwable error){error(error);}}};
+    private final Runnable tick=new Runnable(){@Override public void run(){if(!ready||!active||failed)return;try{game.callAttr("tick");publish();worker.postDelayed(this,game.callAttr("delay").toInt());}catch(Throwable error){error(error);}}};
+    public void playEffect(String effect) {
+        Integer tone=tones.get(effect);
+        if(tone!=null){if(stream!=0)sound.stop(stream);stream=sound.play(tone,1,1,1,0,1);}
+    }
     private void publish() throws Exception {
         introVisible=game.callAttr("is_intro").toBoolean();
         byte[] rgba=game.callAttr("pixels").toJava(byte[].class);

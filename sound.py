@@ -58,7 +58,9 @@ class PulseStream:
 
 class TonePlayer:
     def __init__(self):
-        self.commands=queue.Queue();self.thread=None;self.cache={};self.closed=False
+        self.commands=queue.Queue();self.thread=None
+        self.cache={tuple(map(int,key.split(','))):synthesize(tuple(map(int,key.split(',')))) for key in EFFECTS}
+        self.closed=False
 
     def play(self,command):
         if self.closed:return
@@ -84,6 +86,11 @@ class TonePlayer:
                 # A new tone replaces the previous tone, as on the phone's
                 # monophonic channel. Never discard it because old audio plays.
                 if command is not None:
+                    # Only the newest command belongs on a monophonic channel;
+                    # do not play stale notes after a busy frame or an OS stall.
+                    while command!='quit':
+                        try:command=self.commands.get_nowait()
+                        except queue.Empty:break
                     if command=='quit':break
                     if stream:stream.flush()
                     if command=='stop':pcm=b'';position=0;continue

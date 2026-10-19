@@ -58,3 +58,5 @@ EXPORT int xenzia_render(const void *bank, int bank_size, int program, int note,
     tsf_close(font);
     return written;
 }
+
+#include "graphics.c"

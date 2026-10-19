@@ -80,6 +80,7 @@ class Controller(NSObject):
                 if not prepare(DATA):NSApp.terminate_(None);return
             self.preparing=False
             self.game=Session(DATA);self.failed=False;self.timer=None;self.current_sound=None
+            self.game.audio_sink=self.play_effect
             self.window=NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(NSMakeRect(0,0,760,820),NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskResizable,NSBackingStoreBuffered,False)
             self.window.setTitle_('Snake Xenzia');self.window.setDelegate_(self);self.window.setMinSize_((430,520))
             self.window.setReleasedWhenClosed_(False)
@@ -130,8 +131,14 @@ class Controller(NSObject):
 
     def tick_(self,timer):
         if self.failed:return
-        try:delay=self.game.tick();self.refresh();self.schedule(delay)
+        try:self.game.tick();self.refresh();self.schedule(self.game.delay())
         except Exception:self.error()
+
+    @objc.python_method
+    def play_effect(self,effect):
+        if self.current_sound:self.current_sound.stop()
+        path=resource('audio/'+effect+'.wav')
+        self.current_sound=NSSound.alloc().initWithContentsOfFile_byReference_(str(path),False);self.current_sound.play()
 
     @objc.python_method
     def refresh(self):
@@ -139,9 +146,7 @@ class Controller(NSObject):
         output=io.BytesIO();image.save(output,'PNG',compress_level=0);png=output.getvalue()
         self.screen.image=NSImage.alloc().initWithData_(NSData.dataWithBytes_length_(png,len(png)));self.screen.setNeedsDisplay_(True)
         for effect in json.loads(self.game.take_audio()):
-            if self.current_sound:self.current_sound.stop()
-            path=resource('audio/'+effect+'.wav')
-            self.current_sound=NSSound.alloc().initWithContentsOfFile_byReference_(str(path),False);self.current_sound.play()
+            self.play_effect(effect)
 
     @objc.python_method
     def input(self,key):

@@ -29,21 +29,30 @@ class Session:
         self.intro=NokiaRuntime() if self.options['play_intro'] else None
         self.turns=TurnBuffer();self.last_save=time.monotonic();self.audio=[]
         self.effects=json.loads(resource('audio/effects.json').read_text())
+        self.audio_sink=None
+        self.runtime.sound_sink=self.sound
+        if self.intro is not None:self.intro.sound_sink=self.sound
 
     @property
     def active(self):return self.intro if self.intro is not None else self.runtime
 
     def sounds(self,r):
-        for command in r.sounds:
-            effect=self.effects.get(','.join(map(str,command)))
-            if effect and not self.options['muted']:self.audio.append(effect['file'].split('.')[0])
         r.sounds.clear()
+
+    def sound(self,command):
+        effect=self.effects.get(','.join(map(str,command)))
+        if effect and not self.options['muted']:
+            name=effect['file'].split('.')[0]
+            if self.audio_sink is not None:self.audio_sink(name)
+            else:self.audio.append(name)
+
+    def set_audio_sink(self,host):self.audio_sink=host.playEffect
 
     def take_audio(self):
         sounds=self.audio;self.audio=[]
         return json.dumps(sounds)
 
-    def delay(self):return max(5,min(1000,self.active.delay)) if not self.active.menu else 200
+    def delay(self):return self.active.wait_ms()
     def is_menu(self):return bool(self.active.menu)
     def is_intro(self):return self.intro is not None
     def skip_intro(self):self.intro=None

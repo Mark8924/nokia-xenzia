@@ -66,6 +66,7 @@ class Window:
         try:u.SetProcessDpiAwarenessContext(PTR(-4))
         except Exception:u.SetProcessDPIAware()
         self.game=Session(DATA);self.hwnd=None;self.failed=False;self.full=False;self.pointer=None;self.dragged=False
+        self.game.audio_sink=lambda effect:winsound.PlaySound(str(resource('audio/'+effect+'.wav')),winsound.SND_FILENAME|winsound.SND_ASYNC|winsound.SND_NODEFAULT)
         self.buttons=[];self.scale=1;self.left=0;self.top=0;self.pixels=self.game.pixels('BGRX')
         self.dpi=1
         try:self.dpi=u.GetDpiForSystem()/96
@@ -189,7 +190,7 @@ class Window:
         if msg==0x0005:u.InvalidateRect(hwnd,None,False);return 0
         if msg==0x0113:
             if wp==1 and not self.failed:
-                u.KillTimer(hwnd,1);delay=self.game.tick();self.refresh();u.SetTimer(hwnd,1,delay,None)
+                u.KillTimer(hwnd,1);self.game.tick();self.refresh();u.SetTimer(hwnd,1,self.game.delay(),None)
             elif wp==2:
                 from test_portable import run as test
                 result=test(DATA/'qa');result['window_seconds']=time.monotonic()-self.started

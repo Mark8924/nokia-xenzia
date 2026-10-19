@@ -12,7 +12,7 @@ CALL_INSTRUCTION_LIMIT=1_000_000
 # Keep a finite per-frame budget and the independent five-second deadline.
 FRAME_INSTRUCTION_LIMIT=8_000_000
 class NokiaRuntime:
- def __init__(self):
+ def __init__(self,accelerated=True):
   self.u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_BIG_ENDIAN);u=self.u
   for addr,size in [(CODE,0x10000),(SB,0x10000),(HEAP,0x100000),(KERNEL,0x10000),(HOST,0x10000),(RET,0x1000),(STACK,0x10000)]:u.mem_map(addr,size)
   self.code=resource('snake-code.bin').read_bytes()
@@ -21,6 +21,7 @@ class NokiaRuntime:
   self.heap=HEAP;self.calls=[];self.stop_reason='';self.clock=0
   self.random=random.Random()
   self._frame_start=None
+  self._next_deadline=None;self.sound_sink=None
   self.objs={};self.classes={};self.textpos=SB+0x2000;self.pending=[];self.tracing=False;self.menu_stack=[];self.menu=None;self.overlay=None;self.close_requested=False;self.ui_reset=False;self.sounds=[]
   self.texts=[self.widealloc(t,static=True) for t in json.loads(resource('texts.json').read_text())]
   self.fonts=json.loads(resource('fonts.json').read_text());self.font='3'
@@ -29,7 +30,14 @@ class NokiaRuntime:
   u.mem_write(self.gfx,struct.pack('>I',VT+0x1000))
   u.mem_write(VT+0x1000,b''.join(struct.pack('>I',(HOST+0x1000+i*16+1-VT-0x1000)&0xffffffff) for i in range(128)))
   u.reg_write(UC_ARM_REG_R9,SB)
-  u.hook_add(UC_HOOK_CODE,self.host_hook,begin=HOST,end=HOST+0xffff);u.hook_add(UC_HOOK_CODE,lambda u,a,s,d:u.emu_stop(),begin=RET,end=RET+4)
+  from graphics import create
+  self.graphics=create(self) if accelerated else None
+  if self.graphics:
+   u.hook_add(UC_HOOK_BLOCK,self.host_hook,begin=HOST,end=HOST+7*16-1)
+   u.hook_add(UC_HOOK_BLOCK,self.host_hook,begin=HOST+9*16,end=HOST+258*16-1)
+   u.hook_add(UC_HOOK_BLOCK,self.host_hook,begin=HOST+271*16,end=HOST+0xffff)
+  else:u.hook_add(UC_HOOK_BLOCK,self.host_hook,begin=HOST,end=HOST+0xffff)
+  u.hook_add(UC_HOOK_BLOCK,lambda u,a,s,d:u.emu_stop(),begin=RET,end=RET+4)
   u.hook_add(UC_HOOK_MEM_INVALID,self.invalid)
   self.call(CODE+0x4db4,KERNEL);self.app=self.call(CODE,0);self.state=self.word(self.app+0x18)
   self.frame(1)
@@ -133,7 +141,17 @@ class NokiaRuntime:
    if box[0]<=0 and box[1]<=0 and box[2]>=95 and box[3]>=64 and self.color>>24==255:self.frame_background=self.color
   return 0
  def host_hook(self,u,a,size,data):
+  if self.graphics:self.graphics.pull_heap(self)
+  try:self._host_hook(u,a,size,data)
+  finally:
+   if self.graphics:self.graphics.push_heap(self)
+ def _host_hook(self,u,a,size,data):
   index=(a-HOST)//16
+  if not self.tracing and index in (7,8):
+   p=u.reg_read(UC_ARM_REG_R1)
+   if index==7:ret=self.alloc(p)
+   else:self.free(p);ret=0
+   u.reg_write(UC_ARM_REG_R0,ret);u.reg_write(UC_ARM_REG_PC,u.reg_read(UC_ARM_REG_LR));return
   if not self.tracing and index in GFX_ARGS:
    # Hundreds of calls per frame: read only the registers this method uses.
    # No object/string/unused-stack inspection is needed for drawing primitives.
@@ -158,7 +176,10 @@ class NokiaRuntime:
    lo,hi=v[:2]
    if lo>hi:raise RuntimeError(f'Invalid guest random bounds: {lo}, {hi}')
    ret=self.random.randint(lo,hi)&0xffffffff
-  elif index==13:self.delay=args[2];ret=0
+  elif index==13:
+   self.delay=args[2]
+   self._next_deadline=time.perf_counter()+self.delay/1000 if self._frame_start is not None else None
+   ret=0
   elif index in GFX_ARGS:ret=self.canvas(index,v,u.reg_read(UC_ARM_REG_LR))
   elif index==273:
    name=self.readtext(args[1],False).lower();weight=self.readtext(args[3],False).lower()
@@ -166,6 +187,7 @@ class NokiaRuntime:
    else:self.font='2' if name in ('large','medium') or weight=='bold' else '3'
    ret=1
   elif index in (274,275):
+   if self.graphics:self.graphics.drain(self)
    ptr=self.word(args[3]);text=self.objs.get(ptr,{}).get('text','');ret=self.rendertext(v[0],v[1],text,extra[0])
   elif index>=512:
    ob=self.objs[args[0]];slot=(index-512)%32;name=ob['name'];ret=0
@@ -207,16 +229,20 @@ class NokiaRuntime:
    elif name=='NaiSoundManager' and slot==3:
     # Original MCU 0x0110b36c forwards all eight sound parameters. The
     # third value is the instrument program, NOT a duration. Duration is sixth.
-    self.sounds.append(tuple(v+[self.word(sp+16)]))
+    command=tuple(v+[self.word(sp+16)]);self.sounds.append(command)
+    if self.sound_sink is not None:self.sound_sink(command)
   else:ret=0
   u.reg_write(UC_ARM_REG_R0,ret);u.reg_write(UC_ARM_REG_PC,u.reg_read(UC_ARM_REG_LR))
  def call(self,addr,*args,instruction_limit=CALL_INSTRUCTION_LIMIT):
   u=self.u
+  if self.graphics:self.graphics.sync(self)
   for i in range(8):u.reg_write(UC_ARM_REG_R0+i,0)
   for i,x in enumerate(args):u.reg_write(UC_ARM_REG_R0+i,x)
   u.reg_write(UC_ARM_REG_SP,STACK+0xfff0);u.reg_write(UC_ARM_REG_LR,RET+1)
   try:u.emu_start(addr|1,RET+4,timeout=5000000,count=instruction_limit)
   except UcError as e:raise RuntimeError(f'Original game: {e}; {self.stop_reason}') from e
+  finally:
+   if self.graphics:self.graphics.drain(self);self.graphics.pull_heap(self)
   pc=u.reg_read(UC_ARM_REG_PC)
   if pc!=RET:
    reason='execution deadline exceeded' if u.query(UC_QUERY_TIMEOUT) else 'instruction limit exceeded'
@@ -233,6 +259,10 @@ class NokiaRuntime:
   # frame erases body sections which the animation does not repaint.
   phase=self.u.mem_read(self.state+0x1c,1)[0]
   self.frame(0 if phase in (2,7) else 1,realtime=realtime)
+ def wait_ms(self):
+  if self.menu:return 200
+  if self._next_deadline is None:return max(5,min(1000,self.delay))
+  return max(1,min(1000,int((self._next_deadline-time.perf_counter())*1000+.999)))
  def frame(self,redraw=0,realtime=False):
   if self.menu:return
   if self.u.mem_read(self.state+0x1c,1)==b'\x03':
@@ -244,7 +274,11 @@ class NokiaRuntime:
      addr,aa=self.pending.pop(0);self.call(addr,*aa)
   self.clock+=max(1,self.delay);self._frame_start=time.perf_counter() if realtime else None
   try:self.call(0x817c,self.app,self.gfx,redraw,instruction_limit=FRAME_INSTRUCTION_LIMIT)
-  finally:self._frame_start=None
+  finally:
+   # The phone timer already subtracts work from its requested interval. The
+   # guest clock must also include that work, not just the remaining sleep.
+   if self._frame_start is not None:self.clock+=int(1000*(time.perf_counter()-self._frame_start))
+   self._frame_start=None
  def label(self,item):
   ob=self.objs[item];return self.readtext(self.virtual(ob['extra'][0],1))
  def menu_labels(self):

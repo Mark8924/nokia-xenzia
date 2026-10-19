@@ -1,5 +1,6 @@
 """Regression tests for the phone APIs used by the original game binary."""
 from runtime import NokiaRuntime, Image, ImageOps
+from asset_store import matches_hash
 from pathlib import Path
 import tempfile, json, zlib, struct, hashlib
 
@@ -7,7 +8,7 @@ import tempfile, json, zlib, struct, hashlib
 def main():
     r=NokiaRuntime()
     for filename,digest in json.loads((Path(__file__).parent/'assets/manifest.json').read_text()).items():
-        assert hashlib.sha256((Path(__file__).parent/'assets'/filename).read_bytes()).hexdigest()==digest
+        assert matches_hash((Path(__file__).parent/'assets'/filename).read_bytes(),digest)
 
     # Run Nokia's original circle routine. In particular the extreme scanlines
     # have width=0 and height=1: these must remain visible single pixels.

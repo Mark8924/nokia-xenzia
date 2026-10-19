@@ -54,12 +54,13 @@ def main():
                     assert r.u.mem_read(r.state+0x1c,1)==b'\x04'
                     assert sum(r.image.convert('L').histogram()[:240])>300
                     # The budget does not alter native output or game RAM.
-                    reference=NokiaRuntime();reference.restore(path)
+                    reference=NokiaRuntime(accelerated=False);reference.restore(path)
                     reference.clock+=1
                     reference.call(0x817c,reference.app,reference.gfx,1,
                                    instruction_limit=FRAME_INSTRUCTION_LIMIT*2)
                     assert r.image.tobytes()==reference.image.tobytes()
                     assert r.u.mem_read(snake,264)==reference.u.mem_read(snake,264)
+                    assert r.heap==reference.heap and r.blocks==reference.blocks and r.freeblocks==reference.freeblocks
         print('32/64/100 segments, dense turns and swollen bodies: 12 full-render cases PASS')
 
     # Raising the frame budget must not disable runaway-program protection.

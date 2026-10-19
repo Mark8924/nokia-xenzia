@@ -58,10 +58,13 @@ def run(directory):
         assert hashlib.sha256(pcm).hexdigest()==effect['sha256']
         assert resource('audio/'+Path(effect['file']).stem+'.wav').read_bytes()[:4]==b'RIFF'
     with contextlib.redirect_stdout(io.StringIO()):maximum_snake()
+    from test_responsiveness import main as responsiveness
+    with contextlib.redirect_stdout(io.StringIO()):responsiveness()
     from test_transitions import check_campaign
     transition=check_campaign()
     result={'native_gameplay':True,'three_foods_score':score,'save_resume':True,'intro_no_flicker':True,'intro_unique_frames':len(frames),'options_persist':True,'original_audio_assets':True,'maximum_100_segment_render_cases':12,'finite_guest_guard':True}
     result['campaign_transition']=transition
+    result['clock_audio_native_equivalence']=True
     (data/'portable-test.json').write_text(json.dumps(result,indent=2))
     return result
 

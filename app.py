@@ -53,6 +53,10 @@ class Game(Gtk.ApplicationWindow):
         # Even closing midway through the animation must save the real progress.
         if not self.runtime.menu:self.runtime.key('back')
         self.intro_runtime=NokiaRuntime() if self.play_intro else None
+        self.runtime.sound_sink=self.play_sound
+        if self.intro_runtime is not None:self.intro_runtime.sound_sink=self.play_sound
+        self.focus_pause_source=None
+        self.held_keys=set()
 
         header = Gtk.HeaderBar(title='Snake Xenzia', subtitle='Nokia 1110i · 原版程序')
         header.set_show_close_button(True)
@@ -150,8 +154,10 @@ class Game(Gtk.ApplicationWindow):
         hint.set_line_wrap(True)
         box.pack_start(hint, False, False, 0)
         self.connect('key-press-event', self.key_event)
+        self.connect('key-release-event', self.key_release)
         self.connect('delete-event', self.close_game)
         self.connect('focus-out-event', self.focus_out)
+        self.connect('focus-in-event', self.focus_in)
         self.quit_source=GLib.unix_signal_add(GLib.PRIORITY_DEFAULT,signal.SIGTERM,self.terminate)
         self.full = False
         self.pointer = None
@@ -197,7 +203,7 @@ class Game(Gtk.ApplicationWindow):
             if was_menu and not self.runtime.menu:
                 # Do not inherit the menu's up-to-200ms idle polling timer.
                 if self.tick_source:GLib.source_remove(self.tick_source)
-                self.tick_source=GLib.timeout_add(max(5,min(1000,self.runtime.delay)),self.tick)
+                self.tick_source=GLib.timeout_add(self.runtime.wait_ms(),self.tick)
             self.dirty = True
             self.screen.queue_draw()
         except Exception:
@@ -211,11 +217,17 @@ class Game(Gtk.ApplicationWindow):
                'Return':'select','KP_Enter':'select','5':'select','KP_5':'select','space':'select',
                'Escape':'back','p':'back','P':'back','BackSpace':'back'}.get(name)
         if key:
+            if key in ('select','back') and event.hardware_keycode in self.held_keys:return True
+            self.held_keys.add(event.hardware_keycode)
             self.input(key)
             return True
         if name == 'F11':
             self.toggle_fullscreen()
             return True
+        return False
+
+    def key_release(self,widget,event):
+        self.held_keys.discard(event.hardware_keycode)
         return False
 
     def geometry(self):
@@ -302,22 +314,38 @@ class Game(Gtk.ApplicationWindow):
                 r.frame_for_display(realtime=True)
                 self.turns.sync(r)
                 self.screen.queue_draw()
-            if not self.muted:
-                for command in r.sounds:self.player.play(command)
             r.sounds.clear()
             if time.monotonic()-self.last_save>15:
                 self.runtime.save(STATE)
                 self.last_save=time.monotonic()
             active=self.intro_runtime if self.intro_runtime is not None else self.runtime
-            self.tick_source=GLib.timeout_add(max(5,min(1000,active.delay)) if not active.menu else 200,self.tick)
+            self.tick_source=GLib.timeout_add(active.wait_ms(),self.tick)
         except Exception:
             self.fail()
         return False
 
     def focus_out(self, *_):
+        self.held_keys.clear()
+        self.cancel_focus_pause()
         if not self.runtime.menu and self.runtime.word(self.runtime.state):
-            GLib.idle_add(self.pause_for_focus)
+            self.focus_pause_source=GLib.timeout_add(100,self.confirm_focus_loss)
         return False
+
+    def cancel_focus_pause(self):
+        if self.focus_pause_source:
+            GLib.source_remove(self.focus_pause_source);self.focus_pause_source=None
+
+    def focus_in(self,*_):
+        self.cancel_focus_pause()
+        return False
+
+    def confirm_focus_loss(self):
+        self.focus_pause_source=None
+        if not self.is_active():self.pause_for_focus()
+        return False
+
+    def play_sound(self,command):
+        if not self.muted and not self.dead:self.player.play(command)
 
     def toggle_audio(self, button):
         self.muted=not button.get_active()
@@ -366,6 +394,7 @@ class Game(Gtk.ApplicationWindow):
             except Exception:
                 logging.exception('Saving game')
         self.dead = True
+        self.cancel_focus_pause()
         # Drop gesture references while their buttons are still alive; leaving
         # them for Python finalization after Gtk destroys widgets warns in GTK3.
         for gesture in self.direction_gestures:gesture.reset()
