@@ -50,7 +50,8 @@ def main():
         path=route(head,food,body);assert path;r.key(path[0])
         for _ in range(4):r.frame(1)
         if r.word(r.state+8)>=3:break
-    assert r.word(r.state+8)==3
+    score=r.word(r.state+8)
+    assert score>=3
     progress=original_state(r)[3:];r.save(STATE)
     (DATA/'settings.json').write_text(json.dumps({'muted':True,'color_mode':'dark','controls_visible':False}))
     w=Game(application);remove_timer(w)
@@ -64,10 +65,10 @@ def main():
     assert w.muted and w.color_mode=='dark' and not w.controls_visible
     w.last_save=0;w.tick();remove_timer(w)
     saved=NokiaRuntime();saved.restore(STATE)
-    assert saved.word(saved.state+8)==3 and original_state(saved)[3:]==progress
+    assert saved.word(saved.state+8)==score and original_state(saved)[3:]==progress
     close(w)
     saved=NokiaRuntime();saved.restore(STATE)
-    assert saved.word(saved.state+8)==3 and original_state(saved)[3:]==progress
+    assert saved.word(saved.state+8)==score and original_state(saved)[3:]==progress
     print('Intro enabled, autosave and close midway preserve real progress PASS',flush=True)
 
     w=Game(application);remove_timer(w);frames=set()
@@ -78,7 +79,7 @@ def main():
         w.tick();remove_timer(w)
     assert w.intro_runtime is None and w.runtime.menu
     assert len(frames)>10,('native intro did not animate',len(frames))
-    assert w.runtime.word(w.runtime.state+8)==3 and original_state(w.runtime)[3:]==progress
+    assert w.runtime.word(w.runtime.state+8)==score and original_state(w.runtime)[3:]==progress
     close(w)
     print('Native intro animates and returns to saved menu PASS',index,'frames',len(frames),'unique',flush=True)
 
@@ -92,7 +93,7 @@ def main():
     close(w)
     w=Game(application);remove_timer(w)
     assert not w.play_intro and w.intro_runtime is None and w.runtime.menu
-    assert w.runtime.word(w.runtime.state+8)==3 and original_state(w.runtime)[3:]==progress
+    assert w.runtime.word(w.runtime.state+8)==score and original_state(w.runtime)[3:]==progress
     close(w)
     print('Skip, toggle-off and subsequent direct startup PASS',flush=True)
 

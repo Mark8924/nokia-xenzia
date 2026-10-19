@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Snake Xenzia
+Name[zh_CN]=诺基亚贪吃蛇 Xenzia
+Comment=Original-program compatibility host
+Exec=snake-xenzia
+Icon=nokia-xenzia-host
+Terminal=false
+Categories=Game;ArcadeGame;

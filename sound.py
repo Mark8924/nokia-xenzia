@@ -6,9 +6,10 @@ The original DSP and phone speaker response are not emulated.
 """
 import ctypes,ctypes.util,json,logging,queue,threading
 from pathlib import Path
+from asset_store import resource
 
 RATE=22050
-AUDIO=Path(__file__).resolve().parent/'assets/audio'
+AUDIO=resource('audio')
 EFFECTS=json.loads((AUDIO/'effects.json').read_text())
 
 

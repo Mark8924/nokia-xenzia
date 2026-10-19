@@ -13,6 +13,7 @@ collisions, scoring, speed, mazes, campaign progression and animations.
 
 | Platform | Ready-built download |
 | --- | --- |
+| Arch Linux / Arch Linux ARM | [Installable package](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz) |
 | Android 7+ · ARM64 | [Install APK](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk) |
 | Windows 10/11 · x64 | [Portable ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip) |
 | macOS · Apple Silicon | [Application ZIP](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip) |
@@ -22,7 +23,8 @@ collisions, scoring, speed, mazes, campaign progression and animations.
 **Public builds include the compatibility host, not Nokia's original game data.**
 On first launch, select a ZIP containing the supported extracted resources; macOS
 also accepts a folder. Files are checked against SHA-256 before import. No Python
-installation or command line is needed for these downloads. A raw phone firmware
+installation is needed on Android, Windows or macOS; Arch installs dependencies
+through pacman. A raw phone firmware
 is not a supported import ZIP. This is an independent project, not an official
 Nokia release. Default speed is **4**; saved speed choices are preserved.
 
@@ -56,7 +58,18 @@ are not emulated exactly.
 
 ### Start on Arch Linux
 
-Python 3.10 or newer is required. On Arch, install the host dependencies:
+Download the package above, then install it and launch from the application list:
+
+```sh
+sudo pacman -U ./nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz
+snake-xenzia
+```
+
+Pacman resolves the dependencies. First launch provides a graphical resource-ZIP
+importer. The architecture-independent Python/GTK host uses Arch's native Unicorn
+package, including on ARM64. Other Linux distributions can run from source.
+
+For a source checkout, Python 3.10 or newer is required. On Arch:
 
 ```sh
 sudo pacman -S python-gobject gtk3 python-cairo python-pillow python-unicorn libpulse
@@ -124,12 +137,14 @@ by this project and are supplied separately.
 
 ### 直接下载，无需编译
 
+- [Arch / Arch Linux ARM 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz)
 - [Android ARM64 安装包](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Android-arm64.apk)
 - [Windows x64 便携版](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-Windows-x64.zip)
 - [macOS Apple Silicon 应用](https://github.com/Mark8924/nokia-xenzia/releases/download/v1.0.1-preview/SnakeXenzia-1.0.1-preview-macOS-AppleSilicon.zip)
 - [版本说明与全部下载](https://github.com/Mark8924/nokia-xenzia/releases/latest)
 
-安装包包含运行环境，**不包含诺基亚原版游戏程序和素材**。首次启动会出现导入界面，
+Windows、Mac、安卓安装包包含运行环境；Arch 包由 pacman 安装依赖。
+**公开包不包含诺基亚原版游戏程序和素材**。首次启动会出现导入界面，
 选择包含支持的提取资源的 ZIP 即可；Mac 也支持文件夹。导入时会校验全部资源，
 不会复制他人的存档。原始手机固件不能直接导入。Windows 请完整解压再打开 EXE，
 Mac 将应用拖入“应用程序”；Mac 预览版未经 Apple 公证。
@@ -151,6 +166,18 @@ Linux 使用 GTK，Windows 使用 Win32，macOS 使用 Cocoa，Android 使用原
 没有账号、联网服务、遥测或开机常驻。
 
 ### Arch 运行
+
+下载上面的 Arch 安装包，然后：
+
+```sh
+sudo pacman -U ./nokia-xenzia-host-1.0.1-1-any.pkg.tar.xz
+snake-xenzia
+```
+
+也可以从应用列表打开。首次启动会提供资源 ZIP 的图形导入界面，
+无需编译；ARM64 和 x86_64 使用各自系统提供的原生依赖。
+
+从源码运行的方法：
 
 ```sh
 sudo pacman -S python-gobject gtk3 python-cairo python-pillow python-unicorn libpulse

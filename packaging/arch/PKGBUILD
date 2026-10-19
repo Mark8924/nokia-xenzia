@@ -1,0 +1,20 @@
+pkgname=nokia-xenzia-host
+pkgver=1.0.1
+pkgrel=1
+pkgdesc='Native GTK compatibility host for the original Snake Xenzia program'
+arch=('any')
+url='https://github.com/Mark8924/nokia-xenzia'
+license=('MIT')
+depends=('python' 'python-unicorn>=2.1.4' 'python-gobject' 'gtk3' 'python-cairo' 'python-pillow' 'libpulse')
+source=("nokia-xenzia-host-${pkgver}-linux.tar.gz")
+sha256sums=('d90d17996e074a96b36dc90ccf8e03df4abbd4458b14f250d38de1cfb177abe2')
+
+package() {
+    install -dm755 "$pkgdir/usr/share/nokia-xenzia"
+    cp -a "$srcdir/nokia-xenzia-host/"*.py "$srcdir/nokia-xenzia-host/assets" "$pkgdir/usr/share/nokia-xenzia/"
+    install -Dm755 "$srcdir/nokia-xenzia-host/snake-xenzia" "$pkgdir/usr/bin/snake-xenzia"
+    install -Dm644 "$srcdir/nokia-xenzia-host/nokia-xenzia-host.desktop" "$pkgdir/usr/share/applications/nokia-xenzia-host.desktop"
+    install -Dm644 "$srcdir/nokia-xenzia-host/assets/icon.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/nokia-xenzia-host.png"
+    install -Dm644 "$srcdir/nokia-xenzia-host/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 "$srcdir/nokia-xenzia-host/THIRD-PARTY.md" "$pkgdir/usr/share/doc/$pkgname/THIRD-PARTY.md"
+}
