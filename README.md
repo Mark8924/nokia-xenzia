@@ -126,6 +126,7 @@ After automatic preparation, run the isolated core tests:
 
 ```sh
 python test_runtime.py
+python test_clock.py
 python test_compatibility.py
 python test_sound_controls.py
 python test_frame_budget.py

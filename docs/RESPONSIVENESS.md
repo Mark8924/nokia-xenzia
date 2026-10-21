@@ -9,6 +9,13 @@ grew, the simulated clock fell further behind wall time. Real-time frames now
 include their work in the guest clock, and GUI hosts recheck the timer deadline
 after drawing and saving. Offline deterministic tests still use logical time.
 
+Real-time frames also count time spent between callbacks, including display,
+saving and late host timers. A shared monotonic nanosecond origin prevents
+fractional milliseconds from being discarded on every frame. Menus, logical
+frames and restored saves clear the host timing origin and pending deadline;
+paused time is not replayed on resume. `python test_clock.py` tests these clock
+rules with a controlled host timer, without game resources or JIT execution.
+
 Native helpers batch canvas commands and implement the same allocator API. They
 contain no game program or assets. The unchanged Pillow canvas replays commands
 in order, including alpha blending and fonts. Tests compare every pixel, all guest
@@ -33,6 +40,11 @@ not a performance guarantee for every host.
 原程序会把本帧耗时从下一次等待时间中扣除，但旧运行层的时钟只累计了剩下的
 等待时间，漏掉了绘制耗时。蛇越长，漏算越多。现在实时运行会补齐这部分时间，
 界面绘制、保存之后也会重新检查定时器截止时间。离线回归测试仍可用确定性时钟。
+
+实时帧也会计入两次回调之间的显示、保存和系统定时器延迟。统一的单调纳秒
+时钟起点避免每帧丢弃不足一毫秒的部分。菜单、逻辑时间模式和读取存档会清除
+主机计时起点与旧截止时间，恢复游戏时不会补跑暂停时间。`python test_clock.py`
+使用可控时钟验证这些规则，无需游戏资源或 JIT 执行。
 
 本机助手只批处理绘图接口和实现同样的内存分配接口，不含游戏程序或素材。
 绘图仍按原顺序交给同一个 Pillow 画布。测试逐像素对比画面，并对比全部游戏
