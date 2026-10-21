@@ -20,7 +20,7 @@ class NokiaRuntime:
   u.mem_write(KERNEL,struct.pack('>I',VT));u.mem_write(VT,b''.join(struct.pack('>I',(HOST+i*16+1-VT)&0xffffffff) for i in range(128)));u.mem_write(HOST,b'\x47\x70'*0x8000)
   self.heap=HEAP;self.calls=[];self.stop_reason='';self.clock=0
   self.random=random.Random()
-  self._frame_start=None
+  self._frame_start=None;self._clock_origin=None
   self._next_deadline=None;self.sound_sink=None
   self.objs={};self.classes={};self.textpos=SB+0x2000;self.pending=[];self.tracing=False;self.menu_stack=[];self.menu=None;self.overlay=None;self.close_requested=False;self.ui_reset=False;self.sounds=[]
   self.texts=[self.widealloc(t,static=True) for t in json.loads(resource('texts.json').read_text())]
@@ -171,7 +171,7 @@ class NokiaRuntime:
   elif index==8:
    self.free(args[1])
    ret=0
-  elif index==15:ret=(self.clock+(int(1000*(time.perf_counter()-self._frame_start)) if self._frame_start is not None else 0))&0xffffffff
+  elif index==15:ret=(self._realtime_clock(time.perf_counter_ns()) if self._frame_start is not None else self.clock)&0xffffffff
   elif index==12:
    lo,hi=v[:2]
    if lo>hi:raise RuntimeError(f'Invalid guest random bounds: {lo}, {hi}')
@@ -263,8 +263,14 @@ class NokiaRuntime:
   if self.menu:return 200
   if self._next_deadline is None:return max(5,min(1000,self.delay))
   return max(1,min(1000,int((self._next_deadline-time.perf_counter())*1000+.999)))
+ def _realtime_clock(self,now):
+  started,clock=self._clock_origin
+  return clock+(now-started)//1_000_000
+ def _reset_timing(self):
+  self._frame_start=self._clock_origin=self._next_deadline=None
  def frame(self,redraw=0,realtime=False):
-  if self.menu:return
+  if self.menu:
+   self._reset_timing();return
   if self.u.mem_read(self.state+0x1c,1)==b'\x03':
    controller=self.word(self.state+0x30);m=self.word(controller+8)
    if m in self.objs:
@@ -272,12 +278,19 @@ class NokiaRuntime:
     self.objs[m]['items']=[]
     while self.pending:
      addr,aa=self.pending.pop(0);self.call(addr,*aa)
-  self.clock+=max(1,self.delay);self._frame_start=time.perf_counter() if realtime else None
+  if realtime:
+   now=time.perf_counter_ns()
+   if self._clock_origin is None:
+    self.clock+=max(1,self.delay);self._clock_origin=(now,self.clock)
+   else:self.clock=self._realtime_clock(now)
+   self._frame_start=now
+  else:
+   self._reset_timing();self.clock+=max(1,self.delay)
   try:self.call(0x817c,self.app,self.gfx,redraw,instruction_limit=FRAME_INSTRUCTION_LIMIT)
   finally:
-   # The phone timer already subtracts work from its requested interval. The
-   # guest clock must also include that work, not just the remaining sleep.
-   if self._frame_start is not None:self.clock+=int(1000*(time.perf_counter()-self._frame_start))
+   # Include work between callbacks (display, saves and late OS timers), too.
+   # One nanosecond origin avoids rounding away fractional milliseconds.
+   if self._frame_start is not None:self.clock=self._realtime_clock(time.perf_counter_ns())
    self._frame_start=None
  def label(self,item):
   ob=self.objs[item];return self.readtext(self.virtual(ob['extra'][0],1))
@@ -374,6 +387,7 @@ class NokiaRuntime:
  def restore(self,path):
   data=json.loads(zlib.decompress(Path(path).read_bytes()))
   if data.get('format')!=1 or data['sha256']!=hashlib.sha256(self.code).hexdigest():raise ValueError('Different game data')
+  self._reset_timing()
   for a,b in data['ram'].items():self.u.mem_write(int(a),base64.b64decode(b))
   for k in ['heap','freeblocks','classes','textpos','texts','clock','delay','font','menu','menu_stack','overlay','app','state']:setattr(self,k,data[k])
   self.freeblocks=[tuple(b) for b in self.freeblocks]
